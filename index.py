@@ -6,7 +6,6 @@ from tkinter import ttk
 from tkcalendar import DateEntry
 from datetime import date
 import mysql.connector as sqltor
-from tkinter import *
 from captcha.image import ImageCaptcha
 from PIL import ImageTk, Image
 import random
@@ -28,16 +27,12 @@ sc_img=PhotoImage(file=f"{cwd}\~button_scholarship.png")
 ac_img=PhotoImage(file=f"{cwd}\~button_activity.png")
 ma_img=PhotoImage(file=f"{cwd}\~button_marks.png")
 ad_img=PhotoImage(file=f"{cwd}\~button_attendance.png")
-# home_img=PhotoImage(file=f"{cwd}\~button_marks.png")
 logout_img=PhotoImage(file=f"{cwd}\~logout.png")
 mydb=sqltor.connect(host="localhost",user="root",password="root",database="test")
 flag=True
 
 
 h_font=Font(file="Montserrat-VariableFont_wght.ttf",family="Montserrat",font="Montserrat 40 bold")
-# sh_font="Montserrat 20"
-# sh_font=h_font.copy()
-# sh_font.config(size=20)
 
 def show_pass(btn,pass_entry):
     if(pass_entry['show']=="●"):
@@ -53,7 +48,7 @@ try:
     server=smtplib.SMTP('smtp-mail.outlook.com',587)
     server.starttls()
     server.login(sender,"BBAUsatelliteManager")
-except:
+except Exception as e:
         flag=False
 def trycon():
     global server, sender
@@ -117,6 +112,7 @@ def minorproject(root):
                 self.present_id+=i[0],
                 self.name_of_student+=i[1],
                 self.email_of_student+=i[2],
+            cursor.close()
 
         def check_passwd(self,db,st_root,ID,Passwd,CaptchaEntered,CaptchaShown,mes_box,forget_pass_btn):
             self.catch_data()
@@ -163,7 +159,6 @@ def minorproject(root):
 
 
             st_f=Frame(st_root,bg="#fdfdfd")
-            # st_f.pack()
             st_f.place(x=300,y=150)
 
             st_f2=Frame(st_root,bg="#fdfdfd")
@@ -352,6 +347,8 @@ def minorproject(root):
             logout_btn=Button(st_root,image=logout_img,activebackground="#51ace5",cursor="target",border=0,background="#51ace5",command=lambda:[st_f.destroy(),st_f2.destroy(),st_f3.destroy(),menu_frame.destroy(),logout_btn.place_forget(),self.student_login(st_root)])
             logout_btn.place(x=1250,y=650)
 
+            cursor.close()
+
         def marks(self,id):
             ma_root=Tk()
             ma_root.iconbitmap(f"{cwd}\images.ico")
@@ -376,6 +373,7 @@ def minorproject(root):
             cursor=mydb.cursor()
             cursor.execute("select * from  marks where s_ID=%s and semester=%s",(id,sem))
             l=cursor.fetchone()
+            k=cursor.fetchall()
             cursor.close()
             if l is None:
                 mes.config(text="Result Not Uploaded Yet!!",fg="red")
@@ -389,6 +387,7 @@ def minorproject(root):
             for i in range(3,len(l)-1,2):
                 Label(ma_f,text=f"{l[i]} : {l[i+1]}").pack(pady=5)
             Label(ma_root,text=f"CGPA : {l[13]}").pack(pady=5)
+            cursor.close()
 
         def activity(self,id):
             ac_root=Tk()
@@ -426,6 +425,7 @@ def minorproject(root):
                 else:
                     ac_label=Label(ac_root,text=f"Your Clubs:\n1.          {c1}\n2.           {c2}\n3.            {c3}")
                     ac_label.pack()
+            cursor.close()
 
         def activity_applied(self,ac_root,frame,c1,c2,c3,id,a_btn):
             a_btn.destroy()
@@ -446,6 +446,7 @@ def minorproject(root):
             ac_label.pack()
             btn=Button(ac_root,text="Ok",command=lambda:ac_root.destroy())
             btn.pack()
+            cursor.close()
         def scholarship(self,ID):
             global mydb
             cursor=mydb.cursor()
@@ -465,7 +466,7 @@ def minorproject(root):
                     a=messagebox.showinfo("Scholarship","Applied Successfully!\nWaiting for approval.")
                 else:
                     a=messagebox.showinfo("Scholarship","Congratulations!\nYour Scholarship has been approved.")
-
+            cursor.close()
         def check_attendance(self,i):
             global mydb
             cursor=mydb.cursor()
@@ -477,7 +478,7 @@ def minorproject(root):
                 per=round(((present/total)*100),2)
             mes=f"""Classes Attended: {present}\nTotal Classes: {total}\nAttendance: {per}%"""
             a=messagebox.showinfo(title="Attendance",message=mes)
-    
+            cursor.close()
         def student_login(self,st_root):
             for i in st_root.slaves():
                 i.destroy()
@@ -582,17 +583,18 @@ def minorproject(root):
                 try_btn=Button(err_frame,text="Try Again",cursor="target",command=lambda:self.add_student(st_root))
                 try_btn.pack()
                 err_frame.pack()
-            else:
-                otp_form=Frame(st_root,bg="#fdfdfd")
-                otp_form.pack(pady=10)
-                otp_enter_mes=Label(otp_form,text="Enter OTP:",bg="#fdfdfd",fg="#000000",font=(n2_font))
-                otp_enter_box=Entry(otp_form)
-                otp_enter_mes.grid(row=0,column=0,pady=5)
-                otp_enter_box.grid(row=0,column=1)
-                otp_message=Label(st_root,text="\n\n",bg="#fdfdfd",fg="red",font=(n2_font))
-                otp_message.pack()
-                otp_submit_btn=Button(st_root,text="Submit",cursor="target",command=lambda:self.otp_verification(st_root,one_time_password,otp_enter_box.get(),otp_message,st_ID,st_name,st_pass,st_email))
-                otp_submit_btn.pack(pady=5)
+                return
+            
+            otp_form=Frame(st_root,bg="#fdfdfd")
+            otp_form.pack(pady=10)
+            otp_enter_mes=Label(otp_form,text="Enter OTP:",bg="#fdfdfd",fg="#000000",font=(n2_font))
+            otp_enter_box=Entry(otp_form)
+            otp_enter_mes.grid(row=0,column=0,pady=5)
+            otp_enter_box.grid(row=0,column=1)
+            otp_message=Label(st_root,text="\n\n",bg="#fdfdfd",fg="red",font=(n2_font))
+            otp_message.pack()
+            otp_submit_btn=Button(st_root,text="Submit",cursor="target",command=lambda:self.otp_verification(st_root,one_time_password,otp_enter_box.get(),otp_message,st_ID,st_name,st_pass,st_email))
+            otp_submit_btn.pack(pady=5)
 
         def otp_verification(self,st_root,otp_gen,otp_enter,message_box,st_ID,st_name,st_pass,st_email):
             try:
@@ -621,6 +623,7 @@ def minorproject(root):
                     login_btn.pack()
                 else:
                     message_box.config(text="Invalid OTP")
+                cursor.close()
 
         def forget_passwd(self,st_root):
             for i in st_root.slaves():
@@ -663,7 +666,7 @@ def minorproject(root):
                         mes.config(text="Incorrect Email")
                 else:
                     if(ID in self.present_id):
-                        mes.config("Password Not Generated Yet")
+                        mes.config(text="Password Not Generated Yet")
                         gen_pass=Button(st_root,text="Generate Password?",command=lambda:self.add_student(st_root))
                         gen_pass.pack()
                     else:
@@ -683,17 +686,17 @@ def minorproject(root):
                 back_btn=Button(st_root,text="Back",command=lambda:self.forget_passwd(st_root),cursor="target")
                 back_btn.pack()
                 return
-            else:
-                new_form=Frame(st_root,bg="#fdfdfd")
-                new_form.pack(pady=5)
-                otp_label=Label(new_form,text="Enter OTP: ",bg="#fdfdfd",fg="#000000",font=(n2_font))
-                otp_entry=Entry(new_form)
-                otp_label.grid(row=0,column=0,pady=5)
-                otp_entry.grid(row=0,column=1)
-                submit_btn=Button(st_root,text="Submit",cursor="target",command=lambda:self.check_forget_otp(st_root,otp,otp_entry.get(),ID,new_mes))
-                submit_btn.pack(pady=5)
-                new_mes=Label(st_root,text="",bg="#fdfdfd",fg="red",font=(n2_font))
-                new_mes.pack()
+            
+            new_form=Frame(st_root,bg="#fdfdfd")
+            new_form.pack(pady=5)
+            otp_label=Label(new_form,text="Enter OTP: ",bg="#fdfdfd",fg="#000000",font=(n2_font))
+            otp_entry=Entry(new_form)
+            otp_label.grid(row=0,column=0,pady=5)
+            otp_entry.grid(row=0,column=1)
+            submit_btn=Button(st_root,text="Submit",cursor="target",command=lambda:self.check_forget_otp(st_root,otp,otp_entry.get(),ID,new_mes))
+            submit_btn.pack(pady=5)
+            new_mes=Label(st_root,text="",bg="#fdfdfd",fg="red",font=(n2_font))
+            new_mes.pack()
 
         def check_forget_otp(self,st_root,otp,received_otp,ID,mes):
             otp=str(otp)
@@ -735,18 +738,9 @@ def minorproject(root):
             final_label.pack(pady=5)
             login_btn=Button(st_root,text="Click here to login",cursor="target",command=lambda:self.student_login(st_root))
             login_btn.pack(pady=5)
+            cursor.close()
             
 
-
-
-
-    # root=Tk()
-    # root.title("Data Manager")
-    # root.state("zoomed")
-    # root.iconbitmap(f"{cwd}\images.ico")
-    # root.wm_attributes('-transparentcolor','#fdfdfd')
-    # root.resizable(False,False)
-    # root.configure(bg="#fdfdfd")
 
     for i in root.slaves():
         i.destroy()
@@ -759,8 +753,6 @@ def minorproject(root):
 
     f1=Frame(root,bg="#fdfdfd")
     f1.pack(pady=90)
-    # space1=Label(f1,text=" ",bg="#fdfdfd")
-    # space1.pack()
     heading=Label(f1,text="Student Section",font=(h_font),bg="#fdfdfd",fg="#000000")
     heading.pack()
     f2=Frame(root,bg="#fdfdfd")
@@ -801,8 +793,8 @@ def moderator(root):
     n1_font.config(size=10)
     n2_font=sh_font.copy()
     n2_font.config(weight='normal',size=10)
-    key1="AXYZ-33#4-231B"
-    key2="AXYZ-33#5-231B"
+    key1="admin"
+    key2="teacher"
     pwd_f=False
     def send_st_otp(recipient,ID,name):
         trycon()
@@ -847,14 +839,6 @@ Now you can generate a password using this ID.
 
     flag=True
 
-    # try:
-    #     sender="bbaustudentmanager@outlook.com"
-    #     server=smtplib.SMTP('smtp-mail.outlook.com',587)
-    #     server.starttls()
-    #     server.login(sender,"BBAUsatelliteManager")
-    # except:
-    #     flag=False
-
 
     def send_otp():
         trycon()
@@ -885,7 +869,7 @@ Now you can generate a password using this ID.
             email["Subject"] = "Teacher Login OTP"
             email.set_content(message)
             server.sendmail(sender,t_email,email.as_string())
-        except:
+        except Exception as e:
             raise Exception("No Internet")
         return otp;
 
@@ -931,18 +915,15 @@ Now you can generate a password using this ID.
                 cursor.execute("select t_email from teacher where t_id=%s",(tID,))
                 t_email=cursor.fetchone()
                 t_email=t_email[0]
-                # try:
-                #     otp=send_teacher_otp(t_email)
-                # except:
-                #     T_heading=Label(t_root,text="Teacher Login",font=(h_font),bg="white")
-                #     T_heading.pack(pady=(80,10))
-                #     Label(t_root,text="No Internet",bg="white",fg="red").pack()
-                #     back_btn=Button(t_root,text="Back",cursor="target",command=lambda:self.teacher_login(t_root))
-                #     back_btn.pack()
-                #     return
-                otp=random.randint(1000,9999)
-                print(otp)
-                print(t_email)
+                try:
+                    otp=send_teacher_otp(t_email)
+                except:
+                    T_heading=Label(t_root,text="Teacher Login",font=(h_font),bg="white")
+                    T_heading.pack(pady=(80,10))
+                    Label(t_root,text="No Internet",bg="white",fg="red").pack()
+                    back_btn=Button(t_root,text="Back",cursor="target",command=lambda:self.teacher_login(t_root))
+                    back_btn.pack()
+                    return
                 T_heading=Label(t_root,text="Teacher Login",font=(h_font),bg="white")
                 T_heading.pack(pady=(80,10))
                 t_frame=Frame(t_root,bg="white")
@@ -957,6 +938,7 @@ Now you can generate a password using this ID.
                 mes.pack()
             else:
                 mes.config(text="Incorrect Password",fg="red")
+            cursor.close()
         def validate_t_otp(self,t_root,mes,otp,otp_e):
             otp=str(otp)
             if(otp==otp_e):
@@ -1015,7 +997,7 @@ Now you can generate a password using this ID.
             l=cursor.fetchone()
 
             if l is None:
-                mes.config("ID not registered!",fg="red")
+                mes.config(text="ID not registered!",fg="red")
                 return
 
             for i in a_root.slaves():
@@ -1089,6 +1071,8 @@ Now you can generate a password using this ID.
 
             back=Button(a_root,text="Back",cursor="target",command=lambda:self.view_student(a_root))
             back.pack(pady=10)
+
+            cursor.close()
 
 
 
@@ -1179,7 +1163,7 @@ Now you can generate a password using this ID.
             if(sName not in names):
                 mess.config(text="Enter Correct Name!!",fg="red")
                 return
-            cursor.execute('insert into marks (s_ID,s_name) values (%s,%s)',(sID,sName))
+            cursor.execute('insert into marks (s_ID,s_name,semester) values (%s,%s,%s)',(sID,sName,sem))
             sub=[]
             marks=[]
             for i in range(0,len(a)):
@@ -1189,18 +1173,21 @@ Now you can generate a password using this ID.
                     mess.config(text="Fill all fields!!",fg="red")
                     return
             sub.append(sID)
+            sub.append(sem)
             marks.append(sID)
+            marks.append(sem)
             a=tuple(sub)
             b=tuple(marks)
-            cursor.execute('update marks set sub1=%s,sub2=%s,sub3=%s,sub4=%s,sub5=%s where s_ID=%s',a)
-            cursor.execute('update marks set grade1=%s,grade2=%s,grade3=%s,grade4=%s,grade5=%s where s_ID=%s',b)
-            cursor.execute('update marks set semester=%s,cgpa=%s where s_ID=%s',(sem,cgpa,sID))
+            cursor.execute('update marks set sub1=%s,sub2=%s,sub3=%s,sub4=%s,sub5=%s where s_ID=%s and semester=%s',a)
+            cursor.execute('update marks set grade1=%s,grade2=%s,grade3=%s,grade4=%s,grade5=%s where s_ID=%s and semester=%s',b)
+            cursor.execute('update marks set cgpa=%s where s_ID=%s and semester=%s',(cgpa,sID,sem))
             try:
                 mydb.commit()
             except:
                 mess.config(text="No Internet",fg="red")
             else:
                 mess.config(text="Result Uploaded",fg="green")
+            cursor.close()
 
         def upload_attendance(self,a_root):
             for i in a_root.slaves():
@@ -1273,6 +1260,7 @@ Now you can generate a password using this ID.
 
             back_btn=Button(a_root,text="Back",command=lambda:self.t_functions(a_root))
             back_btn.pack()
+            cursor.close()
 
         def update_attendance(self,i,t,p,mes_box):
             global mydb
@@ -1282,6 +1270,7 @@ Now you can generate a password using this ID.
             cursor.execute(query,args)
             mydb.commit()
             mes_box.config(text="Updated")
+            cursor.close()
 
     class Admin:
         
@@ -1292,7 +1281,6 @@ Now you can generate a password using this ID.
                 mes_lab.config(text="Enter Key!!")
                 return
             elif(KEY==key2):
-                # global t
                 t.teacher_login(a_root)
                 return
             elif(KEY!=key1):
@@ -1305,25 +1293,24 @@ Now you can generate a password using this ID.
                     continue
                 i.destroy()
             try:
-                # OTP=send_otp()
-                OTP=random.randint(1000,9999)
-                print(OTP)
+                OTP=send_otp()
             except:
                 n_m=Label(a_root,text="No Internet",fg="red",bg="white")
                 n_m.pack(pady=10)
                 q_btn=Button(a_root,text="Quit",command=a_root.destroy,cursor="target")
                 q_btn.pack()
-            else:
-                f=Frame(a_root,bg="white")
-                f.pack()
-                otp_Label=Label(f,text="Enter OTP: ",bg="white")
-                otp_entry=Entry(f)
-                otp_Label.grid(row=0,column=0)
-                otp_entry.grid(row=0,column=1,pady=5)
-                sub_btn=Button(a_root,text="Submit",cursor="target",command=lambda:self.otp_checker(a_root,otp_entry.get(),OTP,mes))
-                sub_btn.pack(pady=10)
-                mes=Label(a_root,text="",fg="red",background="white")
-                mes.pack()
+                return
+            
+            f=Frame(a_root,bg="white")
+            f.pack()
+            otp_Label=Label(f,text="Enter OTP: ",bg="white")
+            otp_entry=Entry(f)
+            otp_Label.grid(row=0,column=0)
+            otp_entry.grid(row=0,column=1,pady=5)
+            sub_btn=Button(a_root,text="Submit",cursor="target",command=lambda:self.otp_checker(a_root,otp_entry.get(),OTP,mes))
+            sub_btn.pack(pady=10)
+            mes=Label(a_root,text="",fg="red",background="white")
+            mes.pack()
         def otp_checker(self,a_root,OTP_entered,OTP_sent,mes):
             try:
                 OTP_entered=int(OTP_entered)
@@ -1387,6 +1374,7 @@ Now you can generate a password using this ID.
             global mydb
             query="select st_ID from student_details"
             l=[]
+            
             cursor=mydb.cursor()
             cursor.execute(query)
             x=cursor.fetchall()
@@ -1399,7 +1387,7 @@ Now you can generate a password using this ID.
             temp=cursor.fetchone()
             applied,granted,name_s,c1,c2,c3=temp
             if(granted=="yes"):
-                mes.config("Already joined a club")
+                mes.config(text="Already joined a club")
             else:
                 if(applied=="yes"):
                     a=messagebox.askquestion("Activity",f"Name: {name_s}\nClub 1: {c1}\nClub 2: {c2}\nClub 3: {c3}")
@@ -1416,6 +1404,8 @@ Now you can generate a password using this ID.
                         mes.config(text="")
                 else:
                     mes.config(text="No pending request",fg="black")
+            
+            cursor.close()
 
         def add_student(self,a_root):
             for i in a_root.slaves():
@@ -1641,7 +1631,6 @@ Now you can generate a password using this ID.
             try:
                 sem=int(l[2])
                 id=int(l[7])
-                #16,17,20,25,26,27,
                 mob=int(l[9])
                 if(l[22]!=None):
                     adhar=int(l[22])
@@ -1702,13 +1691,12 @@ Now you can generate a password using this ID.
             try:
                 send_st_otp(l[10],id,l[0])
             except Exception as e:
-                print(e)
                 mes.config(text="No internet!!",fg="red")
                 return
             
             mydb.commit()
             mes.config(text="Data set",fg="green")
-
+            cursor.close()
 
         def delete_student(self,a_root):
             for i in a_root.slaves():
@@ -1769,6 +1757,7 @@ Now you can generate a password using this ID.
                 cursor.execute(query3,args)
                 mydb.commit()
                 mes.config(text="Record Deleted!!",fg="green")
+            cursor.close()
             
         def add_result(self,a_root):
             for i in a_root.slaves():
@@ -1855,7 +1844,7 @@ Now you can generate a password using this ID.
             if(sName not in names):
                 mess.config(text="Enter Correct Name!!",fg="red")
                 return
-            cursor.execute('insert into marks (s_ID,s_name) values (%s,%s)',(sID,sName))
+            cursor.execute('insert into marks (s_ID,s_name,semester) values (%s,%s,%s)',(sID,sName,sem))
             sub=[]
             marks=[]
             for i in range(0,len(a)):
@@ -1865,19 +1854,21 @@ Now you can generate a password using this ID.
                     mess.config(text="Fill all fields!!",fg="red")
                     return
             sub.append(sID)
+            sub.append(sem)
             marks.append(sID)
+            marks.append(sem)
             a=tuple(sub)
             b=tuple(marks)
-            cursor.execute('update marks set sub1=%s,sub2=%s,sub3=%s,sub4=%s,sub5=%s where s_ID=%s',a)
-            cursor.execute('update marks set grade1=%s,grade2=%s,grade3=%s,grade4=%s,grade5=%s where s_ID=%s',b)
-            cursor.execute('update marks set semester=%s,cgpa=%s where s_ID=%s',(sem,cgpa,sID))
+            cursor.execute('update marks set sub1=%s,sub2=%s,sub3=%s,sub4=%s,sub5=%s where s_ID=%s and semester=%s',a)
+            cursor.execute('update marks set grade1=%s,grade2=%s,grade3=%s,grade4=%s,grade5=%s where s_ID=%s and semester=%s',b)
+            cursor.execute('update marks set cgpa=%s where s_ID=%s and semester=%s',(cgpa,sID,sem))
             try:
                 mydb.commit()
             except:
                 mess.config(text="No Internet",fg="red")
             else:
                 mess.config(text="Result Uploaded",fg="green")
-
+            cursor.close()
             
         def upload_attendance(self,a_root):
             for i in a_root.slaves():
@@ -1927,7 +1918,7 @@ Now you can generate a password using this ID.
             s_name=cursor.fetchone()
             s_name=s_name[0]
             h1=Label(a_root,text=f"Upload Attendance of {s_name}",font=(sh_font),bg="white")
-            h1.pack(pady=10)
+            h1.pack(pady=(80,10))
             cursor.execute("select total_days, present from attendance where s_ID=%s",(entered_ID,))
             temp=cursor.fetchone()
             total,present=temp
@@ -1950,6 +1941,7 @@ Now you can generate a password using this ID.
 
             back_btn=Button(a_root,text="Back",command=lambda:self.adm_functions(a_root))
             back_btn.pack()
+            cursor.close()
 
         def update_attendance(self,i,t,p,mes_box):
             global mydb
@@ -1959,6 +1951,7 @@ Now you can generate a password using this ID.
             cursor.execute(query,args)
             mydb.commit()
             mes_box.config(text="Updated")
+            cursor.close()
 
         def approve_scholarship(self,a_root):
             for i in a_root.slaves():
@@ -1999,7 +1992,7 @@ Now you can generate a password using this ID.
                 if(id not in l):
                     mes_box.config(text="ID not Present",fg="red")
                 else:
-                    cursor.execute("select * from scholarship")
+                    cursor.execute("select * from scholarship where s_ID=%s",(id,))
                     s=cursor.fetchone()
                     if s[2]=='no':
                         mes_box.config(text="Student has not applied for scholarship",fg="red")
@@ -2013,7 +2006,7 @@ Now you can generate a password using this ID.
                                 mes_box.config(text="Scholarship Granted",fg="green")
                         else:
                             mes_box.config(text="Scholarship Already Granted",fg="green")
-
+            cursor.close()
 
     adm=Admin()
     t=Teacher()
@@ -2029,7 +2022,7 @@ Now you can generate a password using this ID.
 
     heading=Label(root,text="MODERATOR MODE\n",font=(h_font),bg="white")
     heading.pack(pady=(80,5))
-    if(True):
+    if mydb.is_connected() or (flag):
         global key_entry
         key_entry=Entry(root,width=30,font=100)
         key_entry.insert(0,"Enter Key Here...")
